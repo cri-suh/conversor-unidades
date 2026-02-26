@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Unidades | By Cristiano</title>
+    <meta name="description" content="Conversor de unidades multifuncional - comprimento, peso, temperatura e mais">
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Seu CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-calculator"></i>
+                <h1>Conversor de Unidades</h1>
+            </div>
+            <p class="subtitle">Converta rapidamente entre diferentes unidades de medida</p>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- ABAS DE CATEGORIAS -->
+            <nav class="tabs">
+                <button class="tab-btn active" data-category="comprimento">
+                    <i class="fas fa-ruler"></i>
+                    <span>Comprimento</span>
+                </button>
+                <button class="tab-btn" data-category="peso">
+                    <i class="fas fa-weight"></i>
+                    <span>Peso</span>
+                </button>
+                <button class="tab-btn" data-category="temperatura">
+                    <i class="fas fa-thermometer-half"></i>
+                    <span>Temperatura</span>
+                </button>
+                <button class="tab-btn" data-category="moeda">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>Moeda</span>
+                </button>
+            </nav>
+
+            <!-- CONVERSOR -->
+            <div class="converter-card">
+                
+                <!-- INPUT DE ORIGEM -->
+                <div class="input-group">
+                    <label for="valor-origem">Valor</label>
+                    <input 
+                        type="number" 
+                        id="valor-origem" 
+                        placeholder="Digite o valor"
+                        step="any"
+                    >
+                </div>
+
+                <!-- SELETOR DE UNIDADE ORIGEM -->
+                <div class="input-group">
+                    <label for="unidade-origem">De</label>
+                    <select id="unidade-origem">
+                        <!-- Opções serão preenchidas pelo JavaScript -->
+                    </select>
+                </div>
+
+                <!-- BOTÃO DE TROCA -->
+                <button class="btn-swap" id="btn-trocar">
+                    <i class="fas fa-exchange-alt"></i>
+                </button>
+
+                <!-- SELETOR DE UNIDADE DESTINO -->
+                <div class="input-group">
+                    <label for="unidade-destino">Para</label>
+                    <select id="unidade-destino">
+                        <!-- Opções serão preenchidas pelo JavaScript -->
+                    </select>
+                </div>
+
+                <!-- RESULTADO -->
+                <div class="result-container">
+                    <label>Resultado</label>
+                    <div class="result" id="resultado">
+                        <span class="result-value">0</span>
+                        <span class="result-unit"></span>
+                    </div>
+                    <button class="btn-copy" id="btn-copiar" title="Copiar resultado">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+
+                <!-- BOTÃO LIMPAR -->
+                <button class="btn-clear" id="btn-limpar">
+                    <i class="fas fa-trash"></i>
+                    Limpar
+                </button>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <p>Desenvolvido por <strong>Cristiano</strong> | 2025</p>
+            <div class="social-links">
+                <a href="https://github.com/seu-usuario" target="_blank" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+                <a href="https://linkedin.com/in/seu-perfil" target="_blank" title="LinkedIn">
+                    <i class="fab fa-linkedin"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/script.js"></script>
+</body>
+</html>
