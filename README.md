@@ -8,7 +8,7 @@
 
 Aplicação web responsiva para conversão rápida entre diferentes unidades de medida. Desenvolvida com foco em usabilidade e design intuitivo.
 
-**🔗 [Ver Projeto Online](#)** _(adicionar link após deploy)_
+**🔗 [Ver Projeto Online](https://conversor-unidades-neon.vercel.app/)** 
 
 ---
 
