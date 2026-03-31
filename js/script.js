@@ -26,11 +26,18 @@ const unidades = {
         kelvin: { nome: 'Kelvin (K)' }
     },
     moeda: {
-        real: { nome: 'Real (BRL)', fator: 1 },
-        dolar: { nome: 'Dólar (USD)', fator: 0.20 },
-        euro: { nome: 'Euro (EUR)', fator: 0.18 }
+        BRL: { nome: 'Real (BRL)', simbolo: 'R$' },
+        USD: { nome: 'Dólar (USD)', simbolo: '$' },
+        EUR: { nome: 'Euro (EUR)', simbolo: '€' },
+        GBP: { nome: 'Libra Esterlina (GBP)', simbolo: '£' },
+        JPY: { nome: 'Iene Japonês (JPY)', simbolo: '¥' },
+        ARS: { nome: 'Peso Argentino (ARS)', simbolo: '$' }
     }
 };
+
+// Variável para armazenar taxas de câmbio
+let taxasCambio = {};
+let ultimaAtualizacao = null;
 
 // ============================================
 // ELEMENTOS DO DOM
@@ -49,6 +56,93 @@ const btnCopiar = document.getElementById('btn-copiar');
 let categoriaAtiva = 'comprimento';
 
 // ============================================
+// FUNÇÕES DE API DE MOEDAS
+// ============================================
+
+// Buscar taxas de câmbio
+async function buscarTaxasCambio() {
+    try {
+        // Mostrar loading
+        mostrarLoadingMoeda(true);
+        
+        // Buscar da API
+        const response = await fetch('https://api.exchangerate-api.com/v4/latest/BRL');
+        const data = await response.json();
+        
+        // Armazenar taxas
+        taxasCambio = data.rates;
+        ultimaAtualizacao = new Date();
+        
+        console.log('✅ Taxas de câmbio atualizadas:', taxasCambio);
+        
+        // Esconder loading
+        mostrarLoadingMoeda(false);
+        
+        // Se estiver na aba de moeda, converter
+        if (categoriaAtiva === 'moeda' && valorOrigem.value) {
+            converter();
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao buscar taxas:', error);
+        mostrarLoadingMoeda(false);
+        mostrarErroMoeda();
+    }
+}
+
+// Converter moedas usando API
+function converterMoeda(valor, de, para) {
+    // Se não tiver taxas, retornar 0
+    if (!taxasCambio || Object.keys(taxasCambio).length === 0) {
+        return 0;
+    }
+    
+    // Se as moedas forem iguais
+    if (de === para) {
+        return valor;
+    }
+    
+    // Converter de BRL para a moeda destino
+    if (de === 'BRL') {
+        return valor * taxasCambio[para];
+    }
+    
+    // Converter de qualquer moeda para BRL
+    if (para === 'BRL') {
+        return valor / taxasCambio[de];
+    }
+    
+    // Converter entre duas moedas não-BRL
+    // Primeiro converte para BRL, depois para a moeda destino
+    const valorEmBRL = valor / taxasCambio[de];
+    return valorEmBRL * taxasCambio[para];
+}
+
+// Mostrar/esconder loading
+function mostrarLoadingMoeda(mostrar) {
+    const resultValue = resultadoElement.querySelector('.result-value');
+    if (mostrar) {
+        resultValue.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
+}
+
+// Mostrar erro
+function mostrarErroMoeda() {
+    const resultValue = resultadoElement.querySelector('.result-value');
+    resultValue.textContent = 'Erro ao carregar';
+    
+    // Criar botão de tentar novamente (se não existir)
+    if (!document.getElementById('btn-recarregar-moeda')) {
+        const btnRecarregar = document.createElement('button');
+        btnRecarregar.id = 'btn-recarregar-moeda';
+        btnRecarregar.className = 'btn-recarregar';
+        btnRecarregar.innerHTML = '<i class="fas fa-redo"></i> Tentar Novamente';
+        btnRecarregar.onclick = buscarTaxasCambio;
+        resultadoElement.parentElement.appendChild(btnRecarregar);
+    }
+}
+
+// ============================================
 // FUNÇÕES PRINCIPAIS
 // ============================================
 
@@ -56,6 +150,9 @@ let categoriaAtiva = 'comprimento';
 function init() {
     preencherOpcoes(categoriaAtiva);
     addEventListeners();
+    
+    // Buscar taxas de câmbio ao carregar
+    buscarTaxasCambio();
 }
 
 // Preencher opções dos selects
@@ -116,6 +213,11 @@ function trocarCategoria(btn) {
     // Atualizar categoria ativa
     categoriaAtiva = btn.dataset.category;
     
+    // Se mudou para moeda E ainda não tem taxas, buscar
+    if (categoriaAtiva === 'moeda' && Object.keys(taxasCambio).length === 0) {
+        buscarTaxasCambio();
+    }
+    
     // Preencher novas opções
     preencherOpcoes(categoriaAtiva);
     
@@ -147,11 +249,13 @@ function converter() {
     switch(categoriaAtiva) {
         case 'comprimento':
         case 'peso':
-        case 'moeda':
             resultado = converterPorFator(valor, de, para);
             break;
         case 'temperatura':
             resultado = converterTemperatura(valor, de, para);
+            break;
+        case 'moeda':
+            resultado = converterMoeda(valor, de, para);
             break;
         default:
             resultado = 0;
@@ -161,7 +265,7 @@ function converter() {
     mostrarResultado(resultado);
 }
 
-// Conversão por fator (comprimento, peso, moeda)
+// Conversão por fator (comprimento, peso)
 function converterPorFator(valor, de, para) {
     const opcoes = unidades[categoriaAtiva];
     
@@ -209,19 +313,50 @@ function converterTemperatura(valor, de, para) {
 // ============================================
 
 function mostrarResultado(valor) {
-    // Formatar número (máximo 6 casas decimais, remover zeros desnecessários)
-    const valorFormatado = Number(valor.toFixed(6)).toString();
+    // Formatar número
+    let valorFormatado;
+    
+    // Para moedas, usar 2 casas decimais
+    if (categoriaAtiva === 'moeda') {
+        valorFormatado = Number(valor.toFixed(2)).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    } else {
+        valorFormatado = Number(valor.toFixed(6)).toString();
+    }
     
     // Pegar nome da unidade destino
     const unidadeNome = unidades[categoriaAtiva][unidadeDestino.value].nome;
     
-    // Extrair apenas a sigla (ex: "Metro (m)" -> "m")
-    const sigla = unidadeNome.match(/\(([^)]+)\)/);
-    const unidadeSigla = sigla ? sigla[1] : unidadeNome.split(' ')[0];
+    // Extrair sigla
+    let unidadeSigla;
+    if (categoriaAtiva === 'moeda') {
+        unidadeSigla = unidades.moeda[unidadeDestino.value].simbolo || unidadeDestino.value;
+    } else {
+        const sigla = unidadeNome.match(/\(([^)]+)\)/);
+        unidadeSigla = sigla ? sigla[1] : unidadeNome.split(' ')[0];
+    }
     
     // Atualizar DOM
     resultadoElement.querySelector('.result-value').textContent = valorFormatado;
     resultadoElement.querySelector('.result-unit').textContent = unidadeSigla;
+    
+    // Mostrar info de atualização (só em moeda)
+    const infoMoeda = document.getElementById('info-moeda');
+    if (infoMoeda) {
+        if (categoriaAtiva === 'moeda' && ultimaAtualizacao) {
+            infoMoeda.style.display = 'block';
+            const horaAtual = ultimaAtualizacao.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('texto-atualizacao').textContent = 
+                `Taxas atualizadas às ${horaAtual}`;
+        } else {
+            infoMoeda.style.display = 'none';
+        }
+    }
     
     // Animação
     resultadoElement.style.transform = 'scale(1.05)';
@@ -300,6 +435,17 @@ function copiarResultado() {
 
 resultadoElement.style.transition = 'transform 0.2s ease';
 btnTrocar.style.transition = 'transform 0.3s ease';
+
+// ============================================
+// ATUALIZAÇÃO AUTOMÁTICA DE TAXAS (A CADA 1 HORA)
+// ============================================
+
+setInterval(() => {
+    if (Object.keys(taxasCambio).length > 0) {
+        console.log('🔄 Atualizando taxas de câmbio automaticamente...');
+        buscarTaxasCambio();
+    }
+}, 3600000); // 1 hora = 3600000 milissegundos
 
 // ============================================
 // INICIALIZAR
